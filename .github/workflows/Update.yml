@@ -1,0 +1,51 @@
+name: Update
+
+on:
+  workflow_dispatch:
+  watch:
+    types: [started]
+  schedule:
+    - cron: 0 3 * * *
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  Update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: GetTime
+      run: echo "DATE=$(date +'%Y-%m-%d %H:%M:%S CST')" >> $GITHUB_ENV
+
+    - name: Update
+      run: |
+        # 频道
+        rm -f IPTV.m3u && wget https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv6.m3u -O IPTV.m3u
+
+        # 节目单
+        rm -f EPG.xml && wget https://epg.112114.xyz/pp.xml -O EPG.xml
+        echo "已于 $DATE 自动更新频道
+        ## Star History
+        <a href='https://star-history.com/#skddyj/iptv&Date'>
+        <picture>
+        <source media='(prefers-color-scheme: dark)' srcset='https://api.star-history.com/svg?repos=skddyj/iptv&type=Date&theme=dark' />
+        <source media='(prefers-color-scheme: light)' srcset='https://api.star-history.com/svg?repos=skddyj/iptv&type=Date' />
+        <img alt='Star History Chart' src='https://api.star-history.com/svg?repos=skddyj/iptv&type=Date' />
+        </picture>
+        </a>" > README.md
+
+    - name: Clean
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git checkout --orphan latest_branch
+        git add -A
+        git commit -am "$DATE"
+        git branch -D main
+        git branch -m main
+
+    - name: Push
+      run: git push -f origin main
